@@ -41,4 +41,13 @@ if (await readFile(`${destination}/version.txt`, 'utf8').catch(() => '') !== sta
     await rm(temp, { recursive: true, force: true });
   }
 }
+const modernStamp = 'eaglercraft26-2-6eda6918';
+if (await readFile('public/runtime-26.2/version.txt', 'utf8').catch(() => '') !== modernStamp) {
+  await mkdir('public/runtime-26.2', { recursive: true });
+  const archive = join(tmpdir(), `${modernStamp}.zip`);
+  execFileSync('curl', ['-L', '--fail', '--retry', '2', '-o', archive, `https://cdn.eaglercraft.net/objects/dl/26.2/${modernStamp}.zip`], { stdio: 'inherit' });
+  execFileSync('unzip', ['-o', archive, '-d', 'public/runtime-26.2'], { stdio: 'inherit' });
+  await writeFile('public/runtime-26.2/version.txt', modernStamp);
+  await rm(archive, { force: true });
+}
 console.log(`Runtime ready: ${stamp}`);

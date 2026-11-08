@@ -15,6 +15,10 @@ Open http://localhost:3000. Deploy `dist/` to any static HTTPS host. Keep the sa
 
 The first build downloads the upstream runtime (~88 MB). Subsequent builds reuse it. `scripts/runtime.mjs` pins revision `d9e759ec21fdb807742201b11de8835e34ccd48a` from https://github.com/JessePinkman27/eaglercraft-1.12.2 and applies narrowly scoped menu patches hiding and disabling Multiplayer and Open to LAN. Runtime binaries are generated, not committed. No external game iframe, game server, account, or CDN is needed at play time. The optional launcher font uses Google Fonts with a system fallback.
 
+## Versions
+
+The launcher offers the pinned Eaglercraft 1.12.2 client and the real Eaglercraft 26.2 Zeus distribution. The 26.2 bundle is fetched from the official Eaglercraft CDN during build into `public/runtime-26.2`; it is not renamed 1.12.2 code. Each version uses separate IndexedDB namespaces.
+
 ## Saves and networking
 
 The integrated game server runs in a browser worker. IndexedDB `webcraft-worlds-v1` holds worlds; settings use a separate `webcraft-1.12` namespace. The launcher requests persistent storage, but browsers may decline. Export worlds in the game before clearing browser data or changing devices/origins. Private browsing is not suitable for long-term saves.
