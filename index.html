@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="WebCraft is an original voxel sandbox you play in the browser: explore, mine, build, and share a room with friends." />
+    <meta name="theme-color" content="#2b3a4d" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%238a5d3b'/%3E%3Crect width='16' height='5' fill='%2367a845'/%3E%3Crect x='3' y='8' width='3' height='3' fill='%23664229'/%3E%3Crect x='10' y='10' width='2' height='2' fill='%23664229'/%3E%3C/svg%3E" />
+    <title>WebCraft</title>
+  </head>
+  <body>
+    <canvas id="view" aria-label="WebCraft 3D world"></canvas>
+
+    <div id="menu" class="menu">
+      <section class="screen" id="screen-title">
+        <div class="logo-wrap">
+          <h1 class="logo" aria-label="WebCraft"><span>WEB</span><span>CRAFT</span></h1>
+          <div class="splash" id="splash"></div>
+        </div>
+        <nav class="stack">
+          <button class="btn" data-go="worlds">Singleplayer</button>
+          <button class="btn" data-go="multiplayer">Multiplayer</button>
+          <button class="btn" data-go="options">Options</button>
+        </nav>
+        <footer class="footnote">WebCraft · an original voxel sandbox · not affiliated with any other game</footer>
+      </section>
+
+      <section class="screen" id="screen-worlds" hidden>
+        <h2>Select World</h2>
+        <div class="world-list" id="world-list" role="listbox" aria-label="Saved worlds"></div>
+        <div class="grid-buttons">
+          <button class="btn" id="play-world" disabled>Play Selected World</button>
+          <button class="btn" data-go="create">Create New World</button>
+          <button class="btn" id="delete-world" disabled>Delete</button>
+          <button class="btn" data-go="title">Back</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-create" hidden>
+        <h2>Create New World</h2>
+        <form class="form" id="create-form">
+          <label>World Name<input id="world-name" maxlength="32" value="New World" autocomplete="off" /></label>
+          <label>Seed <small>leave blank for a random world</small><input id="world-seed" maxlength="32" autocomplete="off" /></label>
+          <div class="row-buttons">
+            <button class="btn" type="submit">Create World</button>
+            <button class="btn" type="button" data-go="worlds">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="screen" id="screen-multiplayer" hidden>
+        <h2>Play Multiplayer</h2>
+        <form class="form" id="join-form">
+          <label>Your Name<input id="mp-name" maxlength="16" autocomplete="nickname" placeholder="Builder" /></label>
+          <label>Server Address <small>blank = the server hosting this page</small><input id="mp-server" autocomplete="off" placeholder="this site" /></label>
+          <label>Room <small>everyone with the same room shares one world</small><input id="mp-room" maxlength="24" autocomplete="off" placeholder="lobby" /></label>
+          <p class="status" id="mp-status" role="alert"></p>
+          <div class="row-buttons">
+            <button class="btn" type="submit" id="mp-join">Join Room</button>
+            <button class="btn" type="button" data-go="title">Back</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="screen" id="screen-options" hidden>
+        <h2>Options</h2>
+        <div class="form">
+          <label class="slider">Render Distance: <b id="opt-render-value"></b><input id="opt-render" type="range" min="2" max="12" step="1" /></label>
+          <label class="slider">Field of View: <b id="opt-fov-value"></b><input id="opt-fov" type="range" min="50" max="110" step="1" /></label>
+          <label class="slider">Mouse Sensitivity: <b id="opt-sens-value"></b><input id="opt-sens" type="range" min="0.2" max="3" step="0.1" /></label>
+          <div class="row-buttons"><button class="btn" id="options-done">Done</button></div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-loading" hidden>
+        <h2 id="loading-title">Generating terrain</h2>
+        <div class="progress"><i id="loading-bar"></i></div>
+      </section>
+    </div>
+
+    <div id="hud" class="hud" hidden>
+      <div class="crosshair"></div>
+      <pre id="debug" class="debug" hidden></pre>
+      <div id="players-online" class="players-online" hidden></div>
+      <div id="block-name" class="block-name"></div>
+      <div id="hotbar" class="hotbar"></div>
+      <div class="help">WASD move · Space jump (double-tap to fly) · Shift sprint/descend · LMB mine · RMB place · E blocks · F3 debug<span class="mp-only"> · T chat · Tab players</span></div>
+      <div id="chat" class="chat"><div id="chat-log" class="chat-log"></div><input id="chat-input" maxlength="200" autocomplete="off" placeholder="Say something…" hidden /></div>
+      <ul id="player-list" class="player-list"></ul>
+      <button id="click-to-play" class="click-to-play" hidden>Click to play</button>
+    </div>
+
+    <div id="pause" class="overlay" hidden>
+      <h2>Game Paused</h2>
+      <nav class="stack">
+        <button class="btn" id="resume">Back to Game</button>
+        <button class="btn" id="pause-options">Options</button>
+        <button class="btn" id="quit">Save and Quit to Title</button>
+      </nav>
+    </div>
+
+    <div id="inventory" class="overlay" hidden>
+      <div class="panel">
+        <h2>Blocks</h2>
+        <div id="inventory-grid" class="inventory-grid"></div>
+        <p>Pick a block for the selected hotbar slot. Press E to return.</p>
+      </div>
+    </div>
+
+    <div id="disconnected" class="overlay" hidden>
+      <h2>Connection Lost</h2>
+      <p id="disconnect-reason"></p>
+      <nav class="stack"><button class="btn" id="disconnect-back">Back to Title</button></nav>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

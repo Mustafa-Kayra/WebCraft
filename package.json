@@ -1,0 +1,28 @@
+{
+  "name": "webcraft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An original browser-playable voxel sandbox with singleplayer saves and WebSocket multiplayer rooms.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client \"npm:server:dev\" \"npm:client\"",
+    "client": "vite --host 0.0.0.0",
+    "server:dev": "node server/index.js --dev",
+    "build": "vite build",
+    "preview": "npm run build && npm start",
+    "start": "node server/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "three": "^0.181.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vite": "^7.1.12"
+  }
+}
