@@ -1,0 +1,12 @@
+{
+  "name": "webcraft",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "runtime": "node scripts/runtime.mjs",
+    "build": "npm run runtime && node scripts/build.mjs",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=22" }
+}
