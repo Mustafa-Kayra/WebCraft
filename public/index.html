@@ -22,6 +22,14 @@
       </select>
       <button id="play">OYUNA BAŞLA <span>↗</span></button>
       <p id="status" role="status" class="status">İndirme ekranı yok. Java kurulumu yok.</p>
+      <section class="mods" aria-labelledby="mods-title">
+        <div class="mods-head"><div><span class="eyebrow" id="mods-title"><i></i> MOD / KAYNAK PAKETİ</span><p class="mods-copy">Zip, EPK veya bir mod klasörü ekle. Paketler bu cihazda ve seçtiğin sürümde saklanır.</p></div><span id="mod-count">0 paket</span></div>
+        <div class="mod-actions"><button class="mod-button" id="add-archive" type="button">ZIP / EPK EKLE <span>＋</span></button><button class="mod-button secondary" id="add-folder" type="button">KLASÖR EKLE <span>＋</span></button></div>
+        <input id="archive-input" type="file" accept=".zip,.epk,.jar" hidden>
+        <input id="folder-input" type="file" webkitdirectory multiple hidden>
+        <div id="mod-list" class="mod-list"><span class="empty-mods">Henüz paket eklenmedi.</span></div>
+        <p class="mod-warning">Java / Forge / Fabric jar modları tarayıcıda JVM olmadığı için çalışmaz; uyumsuz paketler burada saklanır ama oyuna yüklenmez.</p>
+      </section>
       <div class="features"><span>01 <b>Hayatta kalma</b></span><span>02 <b>Yaratıcı mod</b></span><span>03 <b>Yerel kayıt</b></span></div>
     </section>
     <section class="landscape" aria-label="Blok dünyası illüstrasyonu">
