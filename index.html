@@ -20,13 +20,27 @@
         <nav class="stack">
           <button class="btn" data-go="worlds">Singleplayer</button>
           <button class="btn" data-go="multiplayer">Multiplayer</button>
+          <button class="btn" data-go="mods">Modlar</button>
           <button class="btn" data-go="options">Options</button>
         </nav>
         <footer class="footnote">WebCraft · an original voxel sandbox · not affiliated with any other game</footer>
       </section>
 
+      <section class="screen" id="screen-mods" hidden>
+        <h2>Mod yöneticisi</h2>
+        <div class="form">
+          <p>Güvenli JSON blok paketleri · yalnızca tek oyunculu. JavaScript ve Forge/Fabric JAR dosyaları çalışmaz.</p>
+          <p>Etkin modlar yalnızca yeni dünyalara eklenir. Eski dünyalar kendi mod kopyalarıyla açılır; devre dışı bırakmak veya kaldırmak kayıtları değiştirmez.</p>
+          <label>JSON mod dosyası içe aktar<input id="mod-file" type="file" accept=".json,application/json"></label>
+          <a class="btn" href="/mods/ornek.json" download>Örnek modu indir</a>
+          <p id="mod-status" class="status" role="alert" aria-live="polite"></p>
+          <div id="mod-list" class="world-list" aria-label="Yüklü modlar"></div>
+          <button class="btn" data-go="title">Geri</button>
+        </div>
+      </section>
       <section class="screen" id="screen-worlds" hidden>
         <h2>Select World</h2>
+        <p id="world-status" class="status" role="alert"></p>
         <div class="world-list" id="world-list" role="listbox" aria-label="Saved worlds"></div>
         <div class="grid-buttons">
           <button class="btn" id="play-world" disabled>Play Selected World</button>
@@ -38,6 +52,7 @@
 
       <section class="screen" id="screen-create" hidden>
         <h2>Create New World</h2>
+        <p id="create-mods"></p>
         <form class="form" id="create-form">
           <label>World Name<input id="world-name" maxlength="32" value="New World" autocomplete="off" /></label>
           <label>Seed <small>leave blank for a random world</small><input id="world-seed" maxlength="32" autocomplete="off" /></label>

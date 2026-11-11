@@ -66,6 +66,45 @@ npm test
 
 The suite covers deterministic terrain, spawn selection, collision and jumping, raycasting, save-data validation, and the multiplayer server with real WebSocket clients: presence, movement relay, edit broadcast and rejection, chat, and room persistence across a restart.
 
+## Bildirimsel mod paketleri
+
+Ana menüde **Modlar → JSON mod dosyası içe aktar → Etkinleştir** yolunu izleyin; **Örnek modu indir** düğmesi içe aktarılabilir iki bloklu paketi verir. Ardından **Singleplayer → Create New World** ile başlayın. Oyun içinde **E** ile blok seçiciyi açın, Yakut veya Dekoratif Tuğla seçin; sağ tıkla yerleştirin, sol tuşu basılı tutarak kazın. Paketler ve etkinlik durumu bu tarayıcının yerel depolamasında kalır. Çok oyunculuya katılmadan önce tüm paketleri Modlar menüsünde devre dışı bırakın; etkin paket varken katılma isteği açık bir hata ile engellenir.
+
+Modlar JavaScript çalıştırmaz; yalnızca JSON ile yeni bloklar tanımlar. Renk ve doku oyun tarafından üretilir. Paketler betik, HTML, harici resim adresi veya özel oyun mantığı içeremez. Başlangıç için [`public/mods/ornek.json`](public/mods/ornek.json) dosyasını kullanabilirsiniz.
+
+Bir paket şu biçimdedir:
+
+```json
+{
+  "format": 1,
+  "id": "demo",
+  "name": "Demo",
+  "blocks": [
+    {
+      "id": "ruby",
+      "name": "Yakut",
+      "color": "#ff0066",
+      "texture": "noise",
+      "solid": true,
+      "hardness": 1.5
+    }
+  ]
+}
+```
+
+- `format` tam olarak `1` olmalıdır. Paket ve blok nesnelerinde bilinmeyen alanlar reddedilir.
+- Paket ve blok `id` değerleri küçük harfle başlamalı; yalnızca `a-z`, `0-9`, `_` ve `-` içermeli ve en fazla 32 karakter olmalıdır. Paket kimlikleri etkin paketler arasında, blok kimlikleri kendi paketi içinde benzersiz olmalıdır.
+- `name`, HTML veya kontrol karakteri içermeyen, en fazla 48 karakterlik görüntülenen addır.
+- `color`, `#ff0066` gibi altı basamaklı onaltılık bir renktir. `texture` yalnızca `noise`, `solid` veya `brick` olabilir.
+- `solid` bir boolean değeridir: `true` oyuncuyu engeller, `false` bloktan geçilmesine izin verir. `hardness`, `0.1` ile `10` arasında sonlu bir sayıdır; kazma süresini belirler.
+- Bir JSON dosyası en fazla 128 KiB olabilir. En fazla 16 paket etkinleştirilebilir; her pakette 1–32, tüm etkin paketlerde toplam en fazla 128 blok bulunabilir.
+
+Paketleri mod yöneticisinden içe aktarın ve yeni dünya için kullanmak istediklerinizi etkinleştirin. Yönetici değişiklikleri **yalnızca yeni dünyaları** etkiler. Yeni dünya oluşturulurken doğrulanmış paketlerin bir kopyası dünya kaydına eklenir. Daha sonra paketi kitaplıktan silmek, devre dışı bırakmak veya değiştirmek mevcut dünyanın bloklarını değiştirmez; dünya her açıldığında kendi kayıtlı paketleri kullanılır. Modların yeni özellikleri mevcut dünyalara otomatik olarak uygulanmaz.
+
+Yerleşik blokların sayısal kimlikleri `0–13` aralığındadır. Mod blokları etkin paket ve blok sırasına göre `14` değerinden başlayarak atanır. Bu yüzden kayıtlı paketlerin sırası ve içeriği dünya ile birlikte korunur; kayıt dosyasındaki paketleri veya blok kimliklerini elle değiştirmeyin. Mod paketleri tek oyunculu dünyalar içindir; çok oyunculu odalar yerleşik blok kataloğunu kullanır.
+
+Geliştiriciler için `src/shared/mods.js`, nesneleri doğrulamak için `validatePack(input)`, boyut denetimli JSON okumak için `parsePack(text)` ve kataloğu kurmak için `configurePacks(packs)` dışa aktarır. Geçersiz girdiler hata üretir. `configurePacks`, önceki mod bloklarını temizler, `BLOCKS` ve `PLACEABLE_BLOCKS` dizilerini yerinde günceller ve `BLOCKS` kataloğunu döndürür. Doğrulama, sınır ve güvenlik kontrolleri ile kayıt uyumluluğu `test/mods.test.js` içinde sınanır; çalıştırmak için `node --test test/mods.test.js` kullanın.
+
 ## Deploying multiplayer
 
 The client is static and can be hosted anywhere, but multiplayer needs the Node server running somewhere that accepts long-lived WebSocket connections. Static-only hosts (GitHub Pages, plain Netlify or Vercel static sites) can serve singleplayer but not rooms. A single Node process on a VM, Fly.io, Railway, Render, or similar works; give it a persistent volume for `DATA_DIR`, terminate TLS in front of it so browsers on HTTPS connect with `wss://`, and forward WebSocket upgrades on `/ws`.

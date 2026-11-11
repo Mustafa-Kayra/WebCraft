@@ -154,6 +154,16 @@ export class Engine {
     this.fogDistance = distance;
   }
 
+  refreshAtlas() {
+    this.atlas.texture.dispose();
+    this.atlas = createAtlas();
+    for (const material of Object.values(this.materials)) {
+      material.map = this.atlas.texture;
+      material.needsUpdate = true;
+    }
+    this.handBlock = null;
+  }
+
   setHandBlock(id) {
     if (this.handBlock === id) return;
     this.handBlock = id;

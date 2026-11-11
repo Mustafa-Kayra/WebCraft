@@ -289,14 +289,15 @@ export function createWebCraftServer({
       return new Promise(resolveListen => http.listen(port, host, () => resolveListen(http.address())));
     },
     async close() {
+      const closingRooms = [...rooms.values()];
       for (const client of wss.clients) client.close(1001, 'Server shutting down');
-      await Promise.all([...rooms.values()].map(room => {
+      await new Promise(resolveClose => wss.close(() => resolveClose()));
+      await Promise.all(closingRooms.map(room => {
         clearTimeout(room.evictTimer);
         for (const client of room.players.values()) room.positions.set(client.nameKey, [client.x, client.y, client.z, client.yaw, client.pitch]);
         if (room.players.size) room.dirty = true;
         return saveRoom(room);
       }));
-      await new Promise(resolveClose => wss.close(() => resolveClose()));
       await new Promise(resolveClose => http.close(() => resolveClose()));
     },
   };

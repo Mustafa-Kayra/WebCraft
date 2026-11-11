@@ -11,6 +11,8 @@ import { NetClient, resolveServerUrl } from './client/net.js';
 import { createStorage } from './client/storage.js';
 import { renderBlockIcon } from './client/textures.js';
 import { World } from './client/world.js';
+import { configurePacks, MAX_PACK_BYTES } from './shared/mods.js';
+import { createModLibrary } from './client/mod-library.js';
 
 const $ = selector => document.querySelector(selector);
 const SPLASHES = ['Blocks all the way down!', 'Runs in a tab!', 'Hand-painted pixels!', 'Bring a friend!', 'Saves as you build!', 'Now with clouds!', 'Mind the water!', 'Zero downloads!'];
@@ -18,6 +20,7 @@ const DEFAULT_SERVER = import.meta.env.VITE_WEBCRAFT_SERVER || '';
 
 const engine = new Engine($('#view'));
 const storage = createStorage();
+const mods = createModLibrary();
 const settings = storage.loadSettings();
 const profile = storage.loadProfile();
 let game = null;
@@ -42,6 +45,8 @@ function stopPanorama() {
 function show(screen) {
   document.querySelectorAll('.screen').forEach(element => { element.hidden = element.id !== `screen-${screen}`; });
   if (screen === 'worlds') renderWorldList();
+  if (screen === 'mods') renderMods();
+  if (screen === 'create') $('#create-mods').textContent = `Yeni dünyaya eklenecek modlar: ${mods.active().map(pack => pack.name).join(', ') || 'Yok'}`;
   if (screen === 'options') syncOptions();
   if (screen === 'multiplayer') {
     $('#mp-status').textContent = '';
@@ -50,6 +55,42 @@ function show(screen) {
   const focusTarget = $(`#screen-${screen} input, #screen-${screen} .btn:not(:disabled)`);
   focusTarget?.focus({ preventScroll: true });
 }
+
+function renderMods() {
+  const list = $('#mod-list');
+  list.replaceChildren();
+  for (const { pack, enabled } of mods.list()) {
+    const row = document.createElement('div');
+    const label = document.createElement('p');
+    label.textContent = `${pack.name} · ${pack.blocks.length} blok · ${enabled ? 'Etkin' : 'Devre dışı'}`;
+    row.append(label);
+    for (const [text, action] of [[enabled ? 'Devre dışı bırak' : 'Etkinleştir', () => mods.toggle(pack.id)], ['Kaldır', () => mods.remove(pack.id)]]) {
+      const button = document.createElement('button');
+      button.className = 'btn';
+      button.textContent = text;
+      button.setAttribute('aria-label', `${pack.name}: ${text}`);
+      button.onclick = () => {
+        try { action(); renderMods(); $('#mod-status').textContent = 'Mod kitaplığı kaydedildi. Değişiklikler yeni dünyalarda geçerlidir.'; }
+        catch (error) { $('#mod-status').textContent = `Kaydedilemedi: ${error.message}`; }
+      };
+      row.append(button);
+    }
+    list.append(row);
+  }
+  if (!mods.list().length) list.textContent = 'Henüz mod yüklenmedi.';
+}
+$('#mod-status').textContent = mods.error;
+$('#mod-file').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    if (file.size > MAX_PACK_BYTES) throw new Error('Dosya en çok 128 KiB olabilir.');
+    mods.import(await file.text());
+    renderMods();
+    $('#mod-status').textContent = 'Mod içe aktarıldı. Yeni dünyalarda kullanmak için Etkinleştir düğmesine basın.';
+  } catch (error) { $('#mod-status').textContent = `İçe aktarılamadı: ${error.message}`; }
+  event.target.value = '';
+});
 
 function renderWorldList() {
   const worlds = storage.listWorlds();
@@ -94,8 +135,12 @@ function startGame(options) {
 }
 
 function playWorld(id) {
-  const saved = storage.loadWorld(id);
+  let saved;
+  try { saved = storage.loadWorld(id); }
+  catch (error) { $('#world-status').textContent = `Dünya açılamadı: ${error.message}`; show('worlds'); return; }
   if (!saved) return;
+  stopPanorama();
+  engine.refreshAtlas();
   startGame({
     mode: 'single',
     seed: saved.meta.seed,
@@ -111,6 +156,8 @@ function playWorld(id) {
 function quitToTitle() {
   game?.dispose();
   game = null;
+  configurePacks([]);
+  engine.refreshAtlas();
   document.body.classList.remove('menu-over-game');
   document.body.classList.add('in-menu');
   startPanorama();
@@ -121,6 +168,11 @@ async function joinMultiplayer(event) {
   event.preventDefault();
   const status = $('#mp-status');
   status.classList.remove('ok');
+  if (mods.active().length) {
+    status.textContent = 'Modlar yalnızca tek oyunculuda desteklenir. Çok oyunculu için Modlar menüsündeki tüm paketleri devre dışı bırakın. Modlu dünyalar sunucuya gönderilmez.';
+    return;
+  }
+  configurePacks([]);
   const name = sanitizeName($('#mp-name').value);
   if (!name) {
     status.textContent = 'Pick a name (letters, numbers, spaces, - _ .).';
@@ -192,7 +244,9 @@ $('#delete-world').addEventListener('click', () => {
 });
 $('#create-form').addEventListener('submit', event => {
   event.preventDefault();
-  const meta = storage.createWorld({ name: $('#world-name').value, seed: seedFromText($('#world-seed').value) });
+  let meta;
+  try { meta = storage.createWorld({ name: $('#world-name').value, seed: seedFromText($('#world-seed').value), packs: mods.active() }); }
+  catch (error) { $('#create-mods').textContent = `Dünya oluşturulamadı: ${error.message}`; return; }
   $('#world-seed').value = '';
   selectedWorld = meta.id;
   playWorld(meta.id);

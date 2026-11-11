@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "id": "ornek",
+  "name": "Örnek Bloklar",
+  "blocks": [
+    {
+      "id": "yakut",
+      "name": "Yakut",
+      "color": "#ff0066",
+      "texture": "noise",
+      "solid": true,
+      "hardness": 1.5
+    },
+    {
+      "id": "dekor",
+      "name": "Dekoratif Tuğla",
+      "color": "#6688cc",
+      "texture": "brick",
+      "solid": false,
+      "hardness": 0.5
+    }
+  ]
+}

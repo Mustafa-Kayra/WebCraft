@@ -196,15 +196,25 @@ const PAINTERS = {
 export const TILE_NAMES = Object.keys(PAINTERS);
 
 export function createAtlas() {
-  const rows = Math.ceil(TILE_NAMES.length / COLUMNS);
+  const custom = BLOCKS.filter(block => block.mod);
+  const names = [...TILE_NAMES, ...custom.map(block => block.tiles.all)];
+  const rows = Math.ceil(names.length / COLUMNS);
   const canvas = document.createElement('canvas');
   canvas.width = COLUMNS * TILE;
   canvas.height = rows * TILE;
   const context = canvas.getContext('2d');
   const tiles = new Map();
-  TILE_NAMES.forEach((name, index) => {
+  names.forEach((name, index) => {
     const p = painter(index * 7919 + 17);
-    PAINTERS[name](p);
+    if (PAINTERS[name]) PAINTERS[name](p);
+    else {
+      const block = custom[index - TILE_NAMES.length];
+      const base = rgb(Number.parseInt(block.color.slice(1), 16));
+      p.fill(base, block.texture === 'noise' ? 0.25 : 0);
+      if (block.texture === 'brick') for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+        if (y % 8 === 0 || (x + (y < 8 ? 0 : 4)) % 8 === 0) p.set(x, y, scale(base, 0.55));
+      }
+    }
     const column = index % COLUMNS;
     const row = Math.floor(index / COLUMNS);
     context.putImageData(new ImageData(p.pixels, TILE, TILE), column * TILE, row * TILE);
